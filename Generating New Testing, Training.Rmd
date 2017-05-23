@@ -1,0 +1,50 @@
+---
+title: "Generating New Testing, Training"
+author: "Sydney Kahmann"
+date: "May 23, 2017"
+output: html_document
+---
+
+```{r}
+library(readr)
+
+lafdtraining <- read_csv("C:/Users/Sydney/OneDrive/2016-17/101C/Final Project/lafdtraining.csv", col_types = cols(`Incident Creation Time (GMT)` = col_character()))
+
+testing_without_response <- read_csv("C:/Users/Sydney/OneDrive/2016-17/101C/Final Project/testing.without.response.txt", col_types = cols(`Incident Creation Time (GMT)` = col_character()))
+
+```
+
+Response variable: elapsed_time
+```{r}
+table(lafdtraining$year)
+table(lafdtraining$`First in District`)
+
+# all are emergencies so not helpful
+table(lafdtraining$`Emergency Dispatch Code`)
+
+table(lafdtraining$`Dispatch Sequence`)
+table(lafdtraining$`Dispatch Status`)
+table(lafdtraining$`Unit Type`)
+table(lafdtraining$`PPE Level`)
+
+# some NAs in the response
+summary(lafdtraining$elapsed_time)
+```
+
+Cleaning up datasets
+```{r}
+# removing Emergency Dispatch Code variable from both datasets
+# removing training observations where the response = NA
+
+training <- lafdtraining[, -5]
+names(training)
+training <- training[which(is.na(training$elapsed_time)==FALSE),]
+summary(training$elapsed_time)
+
+testing <-testing_without_response[,-5]
+names(testing)
+
+write.csv(training, "C:/Users/Sydney/OneDrive/2016-17/101C/Final Project/training.csv")
+write.csv(testing, "C:/Users/Sydney/OneDrive/2016-17/101C/Final Project/testing.csv")
+```
+
