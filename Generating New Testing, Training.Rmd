@@ -44,7 +44,7 @@ summary(training$elapsed_time)
 testing <-testing_without_response[,-5]
 names(testing)
 
-write.csv(training, "C:/Users/Sydney/OneDrive/2016-17/101C/Final Project/training.csv")
-write.csv(testing, "C:/Users/Sydney/OneDrive/2016-17/101C/Final Project/testing.csv")
+# write.csv(training, "C:/Users/Sydney/OneDrive/2016-17/101C/Final Project/training.csv")
+# write.csv(testing, "C:/Users/Sydney/OneDrive/2016-17/101C/Final Project/testing.csv")
 ```
 
