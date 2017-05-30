@@ -3,25 +3,22 @@
 
 ### Loaded training and testing RData files generated in the RMD file
 
-practice.train <- sample(c(1:2317430), 2317430*.5, replace=FALSE)
-training2 <- training[practice.train,]
+# practice.train <- sample(c(1:2317430), 2317430*.5, replace=FALSE)
+# training2 <- training[practice.train,]
 
 # i.train <- sample(c(1:nrow(training2)), nrow(training2)*.7, replace=FALSE)
 i.train <- sample(c(1:nrow(training)), nrow(training)*.7, replace=FALSE)
 
 
-test2 <- training2[-i.train,-c(1,2,9)]
-train2 <- training2[i.train,-c(1,2,9)]
+test2 <- training[-i.train,-c(1,2,9)]
+train2 <- training[i.train,-c(1,2,9)]
 
 library(leaps)
-all <- regsubsets(elapsed_time ~ ., data=train2, method="forward", nvmax=8)
+all <- regsubsets(elapsed_time ~ ., data=train2, method="forward", nvmax=55)
 allsum <- summary(all)
 
 plot(allsum$cp) 
 lines(allsum$cp)
-
-
-## picking 4 variables using BIC regsubsets
 
 predict.regsubsets=function(object, newdata, id,...){
   form=as.formula(object$call[[2]])
@@ -31,14 +28,14 @@ predict.regsubsets=function(object, newdata, id,...){
   mat[, names(coefi)]%*%coefi
 }
 
-pred <- predict.regsubsets(all, newdata= test2, id=4)
+pred <- predict.regsubsets(all, newdata= test2, id=30)
 CP_MSE = mean((test2$elapsed_time - pred)^2, na.rm = TRUE)
 CP_MSE
 
 
 testing2 <- testing[,-c(1,2,9)]
 testing2$elapsed_time <- NA
-pred <- predict.regsubsets(all, newdata= testing2, id=4)
+pred <- predict.regsubsets(all, newdata= testing2, id=30)
 
 result <- cbind(testing$row.id, pred)
 colnames(result) <- c("row.id", "prediction")
