@@ -37,14 +37,15 @@ Cleaning up datasets
 # removing training observations where the response = NA
 
 training <- lafdtraining[, -5]
-names(training)
+# names(training)
 training <- training[which(is.na(training$elapsed_time)==FALSE),]
-summary(training$elapsed_time)
+# summary(training$elapsed_time)
 
 testing <-testing_without_response[,-5]
-names(testing)
+# names(testing)
 
-# write.csv(training, "C:/Users/Sydney/OneDrive/2016-17/101C/Final Project/training.csv")
-# write.csv(testing, "C:/Users/Sydney/OneDrive/2016-17/101C/Final Project/testing.csv")
+
+save(training, file = "C:/Users/Sydney/Desktop/training.RData")
+save(testing, file = "C:/Users/Sydney/Desktop/testing.RData")
 ```
 
