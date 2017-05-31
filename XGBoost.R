@@ -1,20 +1,8 @@
 ## XG Boost
 
-## Adding date/time variables
-load("C:/Users/Sydney/Desktop/training.RData")
+## Load data like in DataManipulation.R
 
-library(lubridate)
-training$`Incident Creation Time (GMT)` <- 
-  hms(training$`Incident Creation Time (GMT)`)
-
-training$hour <- hour(training$`Incident Creation Time (GMT)`)
-training$min <- minute(training$`Incident Creation Time (GMT)`)
-training$second <- second(training$`Incident Creation Time (GMT)`)
-
-# training[,c(3:8, 11)] <- as.data.frame(apply(training[,c(3:8,11)], 2, as.factor))
-
-
-# ## Practicing with 25% of the original training data
+###### Use this code to practice with 25% of the original training data
 # practice.train <- sample(c(1:2317430), 2317430*.25, replace=FALSE)
 # training2 <- training[practice.train,]
 
@@ -54,31 +42,35 @@ train2 <- train2[,-c(1,2,6,7,8,9)]
 
 library(xgboost)
 
+## Everything must be "numeric", "integer" doesn't work
 train2 <- as.data.frame(apply(train2, 2, as.numeric))
 test2 <- as.data.frame(apply(test2, 2, as.numeric))
 
+## Making the model, switch out the column numbers when more variables are added
+## Data = should point to all variables but the elapsed time variable
+## Label = should point to the elapsed time variable
 
 xg = xgboost(data=data.matrix(train2[,c(1:3,5:9)]), label=data.matrix(train2[,4]), 
              nrounds = 100, early_stopping_rounds = 20, eta=.1)
 preds.xgb=predict(xg, newdata=data.matrix(test2[,c(1:3,5:9)]))
 mse.xgb=mean((preds.xgb-test2[,4])^2)
-mse.xgb
+mse.xgb ## training MSE
 
 
-load("C:/Users/Sydney/Desktop/testing.RData")
+### Making predictions for submission
 
-testing$`Incident Creation Time (GMT)` <- 
-  hms(testing$`Incident Creation Time (GMT)`)
-
-testing$hour <- hour(testing$`Incident Creation Time (GMT)`)
-testing$min <- minute(testing$`Incident Creation Time (GMT)`)
-testing$second <- second(testing$`Incident Creation Time (GMT)`)
-
+## Clean up the testing set the same way, dimensions must match
 testing2 <- testing[,-c(1,2,6,7,8,9)]
+
+## Make all variables numeric
 testing2 <- as.data.frame(apply(testing2, 2, as.numeric))
 
+## The prediction column
 preds.xgb=predict(xg, newdata=data.matrix(testing2[,c(1:8)]))
 
+## Create the csv for submission
+## I then delete out the extra row number variable and save the columns in
+########## number format in Excel
 result <- cbind(testing$row.id, preds.xgb)
 colnames(result) <- c("row.id", "prediction")
 write.csv(result, file = "C:/Users/Sydney/Desktop/xgboost.csv")
