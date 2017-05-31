@@ -28,7 +28,7 @@ train2 <- training[i.train,]
 ### Need to convert our factors/categories to numbers
 
 
-# removing the row.id, incident.id, incident creation time variable
+# removing the row.id, incident.id, dispatch status, dispatch sequence, unit type, PPE level, incident creation time variable
 test2 <- test2[,-c(1,2,6,7,8,9)]
 train2 <- train2[,-c(1,2,6,7,8,9)]
 
@@ -58,9 +58,9 @@ train2 <- as.data.frame(apply(train2, 2, as.numeric))
 test2 <- as.data.frame(apply(test2, 2, as.numeric))
 
 
-xg = xgboost(data=data.matrix(train2[,c(1:3,5:7)]), label=data.matrix(train2[,4]), 
+xg = xgboost(data=data.matrix(train2[,c(1:3,5:9)]), label=data.matrix(train2[,4]), 
              nrounds = 100, early_stopping_rounds = 20, eta=.1)
-preds.xgb=predict(xg, newdata=data.matrix(test2[,c(1:3,5:7)]))
+preds.xgb=predict(xg, newdata=data.matrix(test2[,c(1:3,5:9)]))
 mse.xgb=mean((preds.xgb-test2[,4])^2)
 mse.xgb
 
@@ -77,7 +77,7 @@ testing$second <- second(testing$`Incident Creation Time (GMT)`)
 testing2 <- testing[,-c(1,2,6,7,8,9)]
 testing2 <- as.data.frame(apply(testing2, 2, as.numeric))
 
-preds.xgb=predict(xg, newdata=data.matrix(testing2[,c(1:6)]))
+preds.xgb=predict(xg, newdata=data.matrix(testing2[,c(1:8)]))
 
 result <- cbind(testing$row.id, preds.xgb)
 colnames(result) <- c("row.id", "prediction")
