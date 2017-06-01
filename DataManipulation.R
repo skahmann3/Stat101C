@@ -34,11 +34,6 @@ training2[,c("Dispatch_Status", "Unit_Type", "PPE_Level")] <- as.data.frame(appl
 
 
 
-### Now all variables are factors 
-
-##### CODE FOR MODEL USING NO CATEGORICAL FACTORS
-## Everything must be "numeric", "integer" doesn't work
-# train2 <- as.data.frame(apply(train2, 2, as.numeric))
 
 ### Testing
 load("C:/Users/Sydney/Desktop/testing.RData")
@@ -76,6 +71,5 @@ length(table(training$`First in District`)) ### 102 stations
 
 ## Our data doesn't include Stations	80	(LAX),	110	(Boat	5), 111	(Boat	1)	&	114	(Air	Operations)
 
-test2 <- as.data.frame(apply(test2, 2, as.numeric))
 
 
