@@ -6,67 +6,86 @@
 # practice.train <- sample(c(1:2317430), 2317430*.25, replace=FALSE)
 # training2 <- training[practice.train,]
 
-i.train <- sample(c(1:nrow(training)), nrow(training)*.75, replace=FALSE)
+i.train <- sample(c(1:nrow(training2)), nrow(training2)*.75, replace=FALSE)
 
-test2 <- training[-i.train,]
-train2 <- training[i.train,]
+test2 <- training2[-i.train,]
+train2 <- training2[i.train,]
 
 
 ### XG Boost doesn't use categorical variables, only numeric
 ### Need to convert our factors/categories to numbers
 
 
-# removing the row.id, incident.id, dispatch status, dispatch sequence, unit type, PPE level, incident creation time variable
-test2 <- test2[,-c(1,2,6,7,8,9)]
-train2 <- train2[,-c(1,2,6,7,8,9)]
-
-
-### Now all variables are factors or numeric variables
-# train2$`Dispatch Status` <- factor(train2$`Dispatch Status`)
-# train2$`Unit Type` <- factor(train2$`Unit Type`)
-# train2$`PPE Level` <- factor(train2$`PPE Level`)
-# test2$`Dispatch Status` <- factor(test2$`Dispatch Status`)
-# test2$`Unit Type` <- factor(test2$`Unit Type`)
-# test2$`PPE Level` <- factor(test2$`PPE Level`)
-
-###  taking out spaces in variable names 
-# colnames(train2) <- c("year", "First_in_District", 
-#                       "Dispatch_Sequence", "Dispatch_Status", 
-#                       "Unit_Type", "PPE_Level", "elapsed_time")
-# colnames(test2) <- c("year", "First_in_District", 
-#                       "Dispatch_Sequence", "Dispatch_Status", 
-#                       "Unit_Type", "PPE_Level", "elapsed_time")
-
 
 ### Building the model
 
 library(xgboost)
 
-## Everything must be "numeric", "integer" doesn't work
-train2 <- as.data.frame(apply(train2, 2, as.numeric))
-test2 <- as.data.frame(apply(test2, 2, as.numeric))
+output_vector = train2[,"elapsed_time"]
+train2 <- train2[,-7] # taking out elapsed time
 
+### Make sure you switch back these global options commands below
+previous_na_action <- options('na.action')
+options(na.action='na.pass')
+
+library(Matrix)
+sparse_matrix <- sparse.model.matrix(~.-1, data = train2)
+
+### Switch back here! (or will screw up rest of code)
+options(na.action=previous_na_action$na.action)
+
+
+xg = xgboost(data=sparse_matrix, label=output_vector, 
+             nrounds = 50, early_stopping_rounds = 20, eta=.1)
+
+
+### If want to implement feature selection, try out commands here:
+# https://cran.r-project.org/web/packages/xgboost/vignettes/discoverYourData.html
+
+test_elapsed = test2[,"elapsed_time"]
+test2 <- test2[,-7] # taking out elapsed time
+
+
+previous_na_action <- options('na.action')
+options(na.action='na.pass')
+
+sparse_test <- sparse.model.matrix(~.-1, data = test2)
+
+### Switch back here! (or will screw up rest of code)
+options(na.action=previous_na_action$na.action)
+
+
+preds.xgb=predict(xg, newdata=sparse_test)
+mse.xgb=mean((preds.xgb-test_elapsed)^2)
+mse.xgb ## training MSE
+
+
+
+################## CODE FOR NUMERIC VARIABLES ONLY
 ## Making the model, switch out the column numbers when more variables are added
 ## Data = should point to all variables but the elapsed time variable
 ## Label = should point to the elapsed time variable
-
-xg = xgboost(data=data.matrix(train2[,c(1:3,5:9)]), label=data.matrix(train2[,4]), 
-             nrounds = 100, early_stopping_rounds = 20, eta=.1)
-preds.xgb=predict(xg, newdata=data.matrix(test2[,c(1:3,5:9)]))
-mse.xgb=mean((preds.xgb-test2[,4])^2)
-mse.xgb ## training MSE
+# xg = xgboost(data=data.matrix(train2[,c(1:3,5:9)]), label=data.matrix(train2[,4]), 
+#              nrounds = 100, early_stopping_rounds = 20, eta=.1)
+# preds.xgb=predict(xg, newdata=data.matrix(test2[,c(1:3,5:9)]))
+# mse.xgb=mean((preds.xgb-test2[,4])^2)
+# mse.xgb ## training MSE
 
 
 ### Making predictions for submission
 
-## Clean up the testing set the same way, dimensions must match
-testing2 <- testing[,-c(1,2,6,7,8,9)]
 
-## Make all variables numeric
-testing2 <- as.data.frame(apply(testing2, 2, as.numeric))
+previous_na_action <- options('na.action')
+options(na.action='na.pass')
+
+sparse_test <- sparse.model.matrix(~.-1, data = testing2)
+
+### Switch back here! (or will screw up rest of code)
+options(na.action=previous_na_action$na.action)
+
 
 ## The prediction column
-preds.xgb=predict(xg, newdata=data.matrix(testing2[,c(1:8)]))
+preds.xgb=predict(xg, newdata=sparse_test)
 
 ## Create the csv for submission
 ## I then delete out the extra row number variable and save the columns in
@@ -74,4 +93,3 @@ preds.xgb=predict(xg, newdata=data.matrix(testing2[,c(1:8)]))
 result <- cbind(testing$row.id, preds.xgb)
 colnames(result) <- c("row.id", "prediction")
 write.csv(result, file = "C:/Users/Sydney/Desktop/xgboost.csv")
-
